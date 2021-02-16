@@ -79,7 +79,7 @@ o.spec('base', () => {
         testRule({
             grammar,
             ruleName: 'upper',
-            valid: ['S', 'uppercase letter'],
+            valid: [['S', 'uppercase letter']],
             invalid: [emptyStr, emptyArr, ['s', 'lowercase letter'], ['1', 'digit']]
         });
     });

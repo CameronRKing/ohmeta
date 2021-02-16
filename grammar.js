@@ -55,7 +55,7 @@ module.exports = class Grammar {
 
     upper() {
         const res = this._apply('char');
-        this._pred(() => res >= 'A', && res <= 'Z');
+        this._pred(() => res >= 'A' && res <= 'Z');
         return res;
     }
 
