@@ -41,7 +41,11 @@ module.exports = class Grammar {
         return this._not(() => this._apply('anything'));
     }
 
-
+    char() {
+        const res = this._apply('anything');
+        this._pred(() => typeof res === 'string' && res.length === 1);
+        return res;
+    }
 
     // logical operators
     _not(pred) {
@@ -69,6 +73,11 @@ module.exports = class Grammar {
             }
         }
         return ans;
+    }
+
+    _pred(pred) {
+        if (pred()) return true;
+        throw fail;
     }
 
     atEndOfStream() {

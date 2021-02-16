@@ -54,6 +54,15 @@ o.spec('base', () => {
         });
     });
 
+    o('matches char', () => {
+        testRule({
+            grammar,
+            ruleName: 'char',
+            valid: [['s', 'one letter'], ['0', 'one digit'], ['$', 'one symbol']],
+            invalid: [['', 'empty string'], [[], 'empty array'], [[{}], 'array containing empty object']],
+        });
+    })
+
     o('matches many (*)', () => {
         grammar.star = function() {
             return this._many(() => this._apply('anything'));
@@ -63,7 +72,7 @@ o.spec('base', () => {
             grammar,
             ruleName: 'star',
             valid: oneItem.concat(twoItems).concat(empty),
-            invalid: [],
+            invalid: [], // invalid tests will require a new rule
         });
     })
 })
