@@ -49,13 +49,13 @@ module.exports = class Grammar {
 
     lower() {
         const res = this._apply('char');
-        this._pred(() => res >= 'a' && res <= 'z');
+        this._pred(() => 'a' <= res && res <= 'z');
         return res;
     }
 
     upper() {
         const res = this._apply('char');
-        this._pred(() => res >= 'A' && res <= 'Z');
+        this._pred(() => 'A' <= res && res <= 'Z');
         return res;
     }
 
@@ -64,6 +64,16 @@ module.exports = class Grammar {
             () => this._apply('lower'),
             () => this._apply('upper')
         );
+    }
+
+    digit() {
+        const res = this._apply('anything');
+        
+        const isStrDigit = typeof res === 'string' && '0' <= res && res <= '9';
+        const isActualNumber = typeof res === 'number';
+        this._pred(() => isStrDigit || isActualNumber);
+
+        return res;
     }
 
     // logical operators

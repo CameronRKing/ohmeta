@@ -84,6 +84,15 @@ o.spec('base', () => {
         });
     });
 
+    o('matches digit', () => {
+        testRule({
+            grammar,
+            ruleName: 'digit',
+            valid: [['1', 'string 1'], [[1], 'number 1']],
+            invalid: [['s', 'character', emptyStr, emptyArr]]
+        });
+    })
+
     o('matches many (*)', () => {
         grammar.star = function() {
             return this._many(() => this._apply('anything'));
@@ -93,7 +102,7 @@ o.spec('base', () => {
             grammar,
             ruleName: 'star',
             valid: oneItem.concat(twoItems).concat(empty),
-            invalid: [], // invalid tests will require a new rule
+            invalid: [], // is it possible for this rule to fail?
         });
     })
 })
