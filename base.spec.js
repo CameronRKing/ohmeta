@@ -79,6 +79,14 @@ o.spec('base', () => {
         });
     });
 
+    o('matches any-case letter', () => {
+        testRule({
+            ruleName: 'letter',
+            valid: [['S', 'uppercase'], ['s', 'lowercase']],
+            invalid: [['1', 'digit'], [' ', 'whitespace']]
+        });
+    })
+
     o('matches digit', () => {
         testRule({
             ruleName: 'digit',

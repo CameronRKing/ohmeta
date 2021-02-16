@@ -136,7 +136,7 @@ module.exports = class Grammar {
         for (let ii = 0; ii < args.length; ii++) {
             try {
                 this.reset(pos);
-                return arg();
+                return args[ii]();
             } catch (e) {
                 if (e !== fail) throw e;
             }
