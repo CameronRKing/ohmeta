@@ -31,6 +31,10 @@ module.exports = class Grammar {
         this.pos = pos;
     }
 
+    atEndOfStream() {
+        return this.pos === this.stream.length;
+    }
+
     // rules
     anything() {
         if (this.atEndOfStream()) throw fail;
@@ -66,9 +70,21 @@ module.exports = class Grammar {
         );
     }
 
+    space() {
+        const res = this._apply('char');
+        this._pred(() => res.match(/\s/));
+        return res;
+    }
+
+    spaces() {
+        return this._many1(() => this._apply('space'));
+    }
+
+    // this was split into two functions in the original
+    // digit for string digits, number for actual numbers
     digit() {
         const res = this._apply('anything');
-        
+
         const isStrDigit = typeof res === 'string' && '0' <= res && res <= '9';
         const isActualNumber = typeof res === 'number';
         this._pred(() => isStrDigit || isActualNumber);
@@ -89,6 +105,7 @@ module.exports = class Grammar {
         throw fail;
     }
 
+    // aka star (*)
     _many(pred, start) {
         var ans = start !== undefined ? [start] : [];
         while (true) {
@@ -102,6 +119,11 @@ module.exports = class Grammar {
             }
         }
         return ans;
+    }
+
+    // aka plus (+)
+    _many1(pred) {
+        return this._many(pred, pred());
     }
 
     _pred(pred) {
@@ -120,9 +142,5 @@ module.exports = class Grammar {
             }
         }
         throw fail;
-    }
-
-    atEndOfStream() {
-        return this.pos === this.stream.length;
     }
 }
