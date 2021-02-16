@@ -17,6 +17,9 @@ o.spec('base', () => {
     let grammar;
     o.beforeEach(() => grammar = new Grammar());
 
+    const emptyStr = ['', 'empty string'];
+    const emptyArr = [[], 'empty array'];
+
     const oneItem = [
         ['s', 'character'],
         [['s'], 'array with character'],
@@ -32,8 +35,8 @@ o.spec('base', () => {
     ];
 
     const empty = [
-        ['', 'empty string'],
-        [[], 'empty array'],
+        emptyStr,
+        emptyArr,
     ];
 
     o('matches anything', () => {
@@ -59,9 +62,27 @@ o.spec('base', () => {
             grammar,
             ruleName: 'char',
             valid: [['s', 'one letter'], ['0', 'one digit'], ['$', 'one symbol']],
-            invalid: [['', 'empty string'], [[], 'empty array'], [[{}], 'array containing empty object']],
+            invalid: [emptyStr, emptyArr, [[{}], 'array containing empty object']],
         });
-    })
+    });
+
+    o('matches lowercase letter', () => {
+        testRule({
+            grammar,
+            ruleName: 'lower',
+            valid: [['s', 'lowercase letter']],
+            invalid: [emptyStr, emptyArr, ['S', 'uppercase letter'], ['1', 'digit']]
+        });
+    });
+
+    o('matches uppercase letter', () => {
+        testRule({
+            grammar,
+            ruleName: 'upper',
+            valid: ['S', 'uppercase letter'],
+            invalid: [emptyStr, emptyArr, ['s', 'lowercase letter'], ['1', 'digit']]
+        });
+    });
 
     o('matches many (*)', () => {
         grammar.star = function() {

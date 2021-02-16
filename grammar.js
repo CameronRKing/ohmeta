@@ -47,6 +47,25 @@ module.exports = class Grammar {
         return res;
     }
 
+    lower() {
+        const res = this._apply('char');
+        this._pred(() => res >= 'a' && res <= 'z');
+        return res;
+    }
+
+    upper() {
+        const res = this._apply('char');
+        this._pred(() => res >= 'A', && res <= 'Z');
+        return res;
+    }
+
+    letter() {
+        return this._or(
+            () => this._apply('lower'),
+            () => this._apply('upper')
+        );
+    }
+
     // logical operators
     _not(pred) {
         const pos = this.mark();
@@ -77,6 +96,19 @@ module.exports = class Grammar {
 
     _pred(pred) {
         if (pred()) return true;
+        throw fail;
+    }
+
+    _or(...args) {
+        const pos = this.mark();
+        for (let ii = 0; ii < args.length; ii++) {
+            try {
+                this.reset(pos);
+                return arg();
+            } catch (e) {
+                if (e !== fail) throw e;
+            }
+        }
         throw fail;
     }
 
