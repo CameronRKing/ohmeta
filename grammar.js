@@ -10,7 +10,8 @@ module.exports = class Grammar {
         this.stream = stream;
         this.pos = 0;
         try {
-            return this.apply(startRule);
+            this.apply(startRule);
+            return true;
         } catch (e) {
             if (e === fail) return false;
             throw e;

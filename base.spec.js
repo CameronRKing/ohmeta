@@ -1,66 +1,49 @@
 const o = require('ospec');
 const Grammar = require('./grammar.js');
 
+const testRule = ({ grammar, valid, invalid, ruleName }) => {
+    valid.forEach(([seed, msg]) => {
+        o(grammar.match(seed, ruleName))
+            .equals(true)(`${ruleName} matches ${msg}`);
+    });
+
+    invalid.forEach(([seed, msg]) => {
+        o(grammar.match(seed, ruleName))
+            .equals(false)(`${ruleName} doesnt match ${msg}`);
+    });
+}
+
 o.spec('base', () => {
-    let gr;
-    o.beforeEach(() => gr = new Grammar());
+    let grammar;
+    o.beforeEach(() => grammar = new Grammar());
+
+    const oneItem = [
+        ['s', 'character'],
+        [['s'], 'array with character'],
+        [[{}], 'array with empty object'],
+        [[[]], 'nested array'],
+    ];
+
+    const empty = [
+        ['', 'empty string'],
+        [[], 'empty array'],
+    ];
 
     o('matches anything', () => {
-        gr.anythingWorks = function() {
-            if (this.apply('anything')) return true;
-            return false;
-        };
-
-        // succeeds on valid input
-        const valid = [
-            ['s', 'character'],
-            [['s'], 'array with character'],
-            [[{}], 'array with empty object'],
-            [[[]], 'nested array'],
-        ];
-
-        valid.forEach(([seed, msg]) => {
-            const match = gr.match(seed, 'anythingWorks');
-            o(match).equals(true)(`anything matches ${msg}`);
-        });
-
-        // fails on empty input
-        const invalid = [
-            ['', 'empty string'],
-            [[], 'empty array'],
-        ];
-        invalid.forEach(([seed, msg]) => {
-            const match = gr.match(seed, 'anythingWorks');
-            o(match).equals(false)(`anything doesnt match ${msg}`);
+        testRule({
+            grammar,
+            ruleName: 'anything',
+            valid: oneItem,
+            invalid: empty,
         });
     });
 
     o('matches end', () => {
-        gr.endWorks = function() {
-            if (this.apply('end')) return true;
-            return false;
-        };
-
-        const valid = [
-            ['', 'empty string'],
-            [[], 'empty array'],
-        ];
-
-        valid.forEach(([seed, msg]) => {
-            const match = gr.match(seed, 'endWorks');
-            o(match).equals(true)(`end matches ${msg}`);
+        testRule({
+            grammar,
+            ruleName: 'end',
+            valid: empty,
+            invalid: oneItem
         });
-
-        const invalid = [
-            ['s', 'character'],
-            [['s'], 'array with character'],
-            [[{}], 'array with empty object'],
-            [[[]], 'nested array'],
-        ];
-
-        invalid.forEach(([seed, msg]) => {
-            const match = gr.match(seed, 'endWorks');
-            o(match).equals(false)(`end doesnt match ${msg}`);
-        });
-    })
+    });
 })
