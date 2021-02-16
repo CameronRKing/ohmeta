@@ -10,7 +10,7 @@ module.exports = class Grammar {
         this.stream = stream;
         this.pos = 0;
         try {
-            this.apply(startRule);
+            this._apply(startRule);
             return true;
         } catch (e) {
             if (e === fail) return false;
@@ -18,7 +18,7 @@ module.exports = class Grammar {
         }
     }
 
-    apply(rule) {
+    _apply(rule) {
         return this[rule]();
     }
 
@@ -37,9 +37,18 @@ module.exports = class Grammar {
         return this.stream[this.pos++];
     }
 
+    end() {
+        return this._not(() => this._apply('anything'));
+    }
+
+
+
+    // logical operators
     _not(pred) {
         const pos = this.mark();
-        try { pred() } catch(e) {
+        try {
+            pred()
+        } catch(e) {
             if (e !== fail) throw e;
             this.reset(pos);
             return true;
@@ -47,8 +56,19 @@ module.exports = class Grammar {
         throw fail;
     }
 
-    end() {
-        return this._not(() => this.apply('anything'));
+    _many(pred, start) {
+        var ans = start !== undefined ? [start] : [];
+        while (true) {
+            const pos = this.mark();
+            try {
+                ans.push(pred())
+            } catch (e) {
+                if (e !== fail) throw e
+                this.reset(pos);
+                break;
+            }
+        }
+        return ans;
     }
 
     atEndOfStream() {

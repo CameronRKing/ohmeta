@@ -24,6 +24,13 @@ o.spec('base', () => {
         [[[]], 'nested array'],
     ];
 
+    const twoItems = [
+        ['st', 'two characters'],
+        [['s', 't'], 'array with two characters'],
+        [[{}, {}], 'array with two empty objects'],
+        [[[], []], 'array with two nested arrays']
+    ];
+
     const empty = [
         ['', 'empty string'],
         [[], 'empty array'],
@@ -46,4 +53,17 @@ o.spec('base', () => {
             invalid: oneItem
         });
     });
+
+    o('matches many (*)', () => {
+        grammar.star = function() {
+            return this._many(() => this._apply('anything'));
+        };
+
+        testRule({
+            grammar,
+            ruleName: 'star',
+            valid: oneItem.concat(twoItems).concat(empty),
+            invalid: [],
+        });
+    })
 })
