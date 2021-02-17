@@ -8,6 +8,7 @@ class Failer {
 
 module.exports = class Grammar {
     constructor() {
+        this.fail = fail;
         this.stream = null;
         this.pos = null;
         this.memoTable = {};
@@ -158,7 +159,24 @@ module.exports = class Grammar {
     }
 
     spaces() {
-        return this._many1(() => this._apply('space'));
+        return this._many(() => this._apply('space'));
+    }
+
+    token(str) {
+        this._apply('spaces');
+        return this._applyWithArgs('seq', str);
+    }
+
+    seq(seq) {
+        for (let ii = 0; ii < seq.length; ii++) {
+            this._applyWithArgs('exactly', seq[ii]);
+        }
+        return seq;
+    }
+
+    exactly(wanted) {
+        if (this._apply('anything') === wanted) return wanted;
+        throw fail;
     }
 
     // this was split into two functions in the original

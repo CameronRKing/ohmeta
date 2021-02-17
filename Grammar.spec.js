@@ -1,5 +1,5 @@
 const o = require('ospec');
-const Grammar = require('./grammar.js');
+const Grammar = require('./Grammar.js');
 
 o.spec('base', () => {
     let grammar;
