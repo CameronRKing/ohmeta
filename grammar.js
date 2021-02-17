@@ -22,6 +22,14 @@ module.exports = class Grammar {
         return this[rule]();
     }
 
+    _applyWithArgs() {
+        throw 'todo';
+    }
+
+    _superApplyWithArgs() {
+        throw 'todo';
+    }
+
     // stream control
     mark() {
         return this.pos;
@@ -105,6 +113,15 @@ module.exports = class Grammar {
         throw fail;
     }
 
+    _lookahead() {
+        throw 'todo';
+    }
+
+    // aka ?
+    _opt() {
+        throw 'todo'
+    }
+
     // aka star (*)
     _many(pred, start) {
         var ans = start !== undefined ? [start] : [];
@@ -142,5 +159,22 @@ module.exports = class Grammar {
             }
         }
         throw fail;
+    }
+
+    _xor() {
+        throw 'todo'
+    }
+
+    // tbh, I have no idea what these three do or why they exist
+    _consumedBy() {
+        throw 'todo';
+    }
+
+    _idxConsumedBy() {
+        throw 'todo';
+    }
+
+    _interleave() {
+        throw 'todo';
     }
 }
