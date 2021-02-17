@@ -7,12 +7,12 @@ o.spec('base', () => {
 
     const testRule = ({ valid, invalid, ruleName }) => {
         valid.forEach(([seed, msg]) => {
-            o(grammar.match(seed, ruleName))
+            o(!!grammar.match(seed, ruleName))
                 .equals(true)(`${ruleName} matches ${msg}`);
         });
 
         invalid.forEach(([seed, msg]) => {
-            o(grammar.match(seed, ruleName))
+            o(!!grammar.match(seed, ruleName))
                 .equals(false)(`${ruleName} doesnt match ${msg}`);
         });
     }

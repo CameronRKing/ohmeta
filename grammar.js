@@ -1,33 +1,106 @@
 const fail = { toString() { return 'match failed' } };
 
+class Failer {
+    constructor() {
+        this.used = false;
+    }
+}
+
 module.exports = class Grammar {
     constructor() {
         this.stream = null;
         this.pos = null;
+        this.memoTable = {};
     }
 
-    match(stream, startRule) {
+    match(stream, startRule, args, matchFailed) {
+        return this._genericMatch(stream, startRule, args, matchFailed);
+    }
+
+    _genericMatch(stream, rule, args=[], matchFailed=null) {
         this.stream = stream;
         this.pos = 0;
         try {
-            this._apply(startRule);
-            return true;
+            return args.length === 0 ? this._apply(rule)
+                : this._applyWithArgs(rule, args)
         } catch (e) {
-            if (e === fail) return false;
+            if (e === fail) {
+                if (typeof matchFailed === 'function') {
+                    // probably want to parse a stack trace to indicate where we are in the rule application process too
+                    return matchFailed(this, this.mark());                    
+                } else {
+                    return false;
+                }
+            }
             throw e;
+        } finally {
+            this.stream = null;
+            this.pos = null;
+            this.memoTable = {};
         }
     }
 
     _apply(rule) {
-        return this[rule]();
+        const memoLoc = `${this.mark()}-${rule}`;
+        let memo = this.memoTable[memoLoc];
+        if (memo === undefined) {
+            const originalPos = this.mark();
+            const failer = new Failer();
+
+            if (this[rule] === undefined)
+                throw `Tried to apply undefined rule "${rule}"`;
+
+            // set up potential to grow a left-recursive seed
+            this.memoTable[memoLoc] = failer;
+
+            const ans = this[rule]();
+            const nextInput = this.mark();
+
+            this.memoTable[memoLoc] = memo = { ans, nextInput };
+
+            // try to grow the seed
+            if (failer.used) {
+                const sentinel = this.mark();
+                while (true) {
+                    try {
+                        this.reset(originalPos);
+                        const ans = this[rule]();
+                        // if the rule application didn't succeed, quit growing
+                        if (this.mark() === sentinel) throw fail;
+                        memo.ans = ans;
+                        memo.nextInput = this.mark();
+                    } catch (e) {
+                        if (e !== fail) throw e;
+                        break;
+                    }
+                }
+            }
+        } else if (memo instanceof Failer) {
+            memo.used = true;
+            throw fail;
+        }
+
+        this.reset(memo.nextInput);
+
+        return memo.ans;
     }
 
-    _applyWithArgs() {
-        throw 'todo';
+    // not memoized, so can't be left-recursive
+    _applyWithArgs(rule, ...args) {
+        // original definition was somewhat more complex
+        // I have no idea why it prepended "extra" arguments to the stream in reverse order
+        return this[rule](...args);
     }
 
-    _superApplyWithArgs() {
-        throw 'todo';
+    // also not memoized
+    _superApplyWithArgs(parent, rule, ...args) {
+        return parent[rule](...args);
+        // curious--in the original,
+        // the function on the current object
+        // is applied with `this` set to the parent
+        // ... but wouldn't that mean we call this version of the fn, not the parent's?
+        // only additional calls inside the current fn
+        // would be dispatched to the parent
     }
 
     // stream control
@@ -113,13 +186,24 @@ module.exports = class Grammar {
         throw fail;
     }
 
-    _lookahead() {
-        throw 'todo';
+    _lookahead(pred) {
+        const pos = this.mark();
+        const res = pred();
+        this.reset(pos);
+        return res;
     }
 
     // aka ?
-    _opt() {
-        throw 'todo'
+    _opt(pred) {
+        const pos = this.mark();
+        let ans;
+        try {
+            ans = pred();
+        } catch (e) {
+            if (e !== fail) throw e;
+            this.reset(pos);
+        }
+        return ans;
     }
 
     // aka star (*)
@@ -161,9 +245,6 @@ module.exports = class Grammar {
         throw fail;
     }
 
-    _xor() {
-        throw 'todo'
-    }
 
     // tbh, I have no idea what these three do or why they exist
     _consumedBy() {
