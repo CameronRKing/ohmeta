@@ -28,7 +28,7 @@ module.exports = class Grammar {
             if (e === fail) {
                 if (typeof matchFailed === 'function') {
                     // probably want to parse a stack trace to indicate where we are in the rule application process too
-                    return matchFailed(this, this.mark());                    
+                    return matchFailed(this, this.mark());
                 } else {
                     return false;
                 }
@@ -113,8 +113,16 @@ module.exports = class Grammar {
         this.pos = pos;
     }
 
+    resetToStart() {
+        this.pos = 0;
+    }
+
     atEndOfStream() {
         return this.pos === this.stream.length;
+    }
+
+    isStreamlike(val) {
+        return Array.isArray(val) || typeof val === 'string';
     }
 
     // rules
@@ -152,9 +160,10 @@ module.exports = class Grammar {
         );
     }
 
+    // doesn't include newline
     space() {
         const res = this._apply('char');
-        this._pred(() => res.match(/\s/));
+        this._pred(() => res.match(/[ \t]/));
         return res;
     }
 
@@ -175,7 +184,7 @@ module.exports = class Grammar {
     }
 
     exactly(wanted) {
-        if (this._apply('anything') === wanted) return wanted;
+        if (this._apply('anything') == wanted) return wanted;
         throw fail;
     }
 
@@ -189,6 +198,55 @@ module.exports = class Grammar {
         this._pred(() => isStrDigit || isActualNumber);
 
         return res;
+    }
+
+    // non-character matchers
+    _obj(matchers) {
+        // anything in JS will accept property lookup
+        const obj = this._apply('anything');
+
+        const pos = this.mark();
+        const oldStream = this.stream;
+        const oldMemo = this.memoTable;
+
+        // what if the matchers have semantic actions?
+        // should we deep clone the object and replace relevant prop?
+        matchers.forEach(({ prop, matcher }) => {
+            let val = obj[prop];
+            // wrap non-streamlike things in an array so we can match on them
+            if (!this.isStreamlike(val)) val = [val];
+            this.stream = val;
+            this.resetToStart();
+            this.memoTable = {};
+
+            matcher();
+        });
+
+        this.stream = oldStream;
+        this.reset(pos);
+        this.memoTable = oldMemo;
+        return obj;
+    }
+
+    _list(pred) {
+        const val = this._apply("anything")
+        if (!this.isStreamlike(val)) throw fail;
+
+        const oldStream = this.stream;
+        const pos = this.mark();
+        this.stream = val;
+        this.resetToStart();
+
+        pred();
+
+        this._apply('end')
+
+        this.stream = oldStream;
+        this.reset(pos);
+
+        // the predicate's actions will modify the stream,
+        // so we can return it directly
+        return val;
     }
 
     // logical operators

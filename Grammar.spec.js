@@ -98,16 +98,17 @@ o.spec('base', () => {
     o('matches single whitespace', () => {
         testRule({
             ruleName: 'space',
-            valid: [['\n', 'newline'], ['\t', 'tab'], [' ', 'space']],
-            invalid: [emptyStr, emptyArr, ['s', 'letter'], ['1', 'digit']]
+            valid: [['\t', 'tab'], [' ', 'space']],
+            invalid: [['\n', 'newline'], emptyStr, emptyArr, ['s', 'letter'], ['1', 'digit']]
         });
     });
 
     o('matches multiple whitespace', () => {
+        // since spaces uses many() behind the scenes, it's hard to test invalid rules
         testRule({
             ruleName: 'spaces',
-            valid: [['\n\n', 'newlines'], ['\t\t', 'tabs'], ['  ', 'spaces'], ['\n', 'single newline']],
-            invalid: [['s', 'single character'], emptyStr]
+            valid: [['\t\t', 'tabs'], ['  ', 'spaces']],
+            invalid: []
         });
     });
 
@@ -121,5 +122,43 @@ o.spec('base', () => {
             valid: oneItem.concat(twoItems).concat(empty),
             invalid: [], // is it possible for this rule to fail?
         });
-    })
+    });
+
+    o('matches object properties', () => {
+        const makeTest = (prop, matcher) => {
+            return function() {
+                return this._obj([{ prop, matcher: matcher.bind(grammar) }]);
+            }
+        }
+        grammar.objSeq = makeTest('foo', function() { return this._applyWithArgs('seq', 'bar') });
+
+        testRule({
+            ruleName: 'objSeq',
+            valid: [[[{ foo: 'bar' }], 'valid seq']],
+            invalid: [
+                [[{ foo: 'bbar' }], 'invalid seq'],
+                [[{ foo: {} }], 'wrong type'],
+                [[{ bar: 'baz' }], 'undefined prop']
+            ]
+        });
+
+        grammar.objNested = makeTest('foo', function() {
+            return this._obj([{
+                prop: 'bar',
+                matcher: (function() { return this._apply('letter'); }).bind(grammar)
+            }]);
+        });
+
+        testRule({
+            ruleName: 'objNested',
+            valid: [
+                [[{ foo: { bar: 'z' } }], 'valid nested object']
+            ],
+            invalid: [
+                [[{ foo: { bar: '1' } }], 'nested object with invalid property'],
+                [[{ foo: { baz: 'z' } }], 'nested object with undefined property'],
+                [[{ foo: '1' }], 'missing nested object']
+            ]
+        });
+    });
 })
