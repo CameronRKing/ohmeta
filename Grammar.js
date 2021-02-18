@@ -125,6 +125,20 @@ module.exports = class Grammar {
         return Array.isArray(val) || typeof val === 'string';
     }
 
+    makeMemento() {
+        return {
+            pos: this.mark(),
+            stream: this.stream,
+            memoTable: this.memoTable
+        };
+    }
+
+    restore(memento) {
+        this.stream = memento.stream;
+        this.reset(memento.pos);
+        this.memoTable = memento.memoTable;
+    }
+
     // rules
     anything() {
         if (this.atEndOfStream()) throw fail;
@@ -205,9 +219,7 @@ module.exports = class Grammar {
         // anything in JS will accept property lookup
         const obj = this._apply('anything');
 
-        const pos = this.mark();
-        const oldStream = this.stream;
-        const oldMemo = this.memoTable;
+        const memento = this.makeMemento();
 
         // what if the matchers have semantic actions?
         // should we deep clone the object and replace relevant prop?
@@ -222,27 +234,25 @@ module.exports = class Grammar {
             matcher();
         });
 
-        this.stream = oldStream;
-        this.reset(pos);
-        this.memoTable = oldMemo;
+        this.restore(memento);
+
         return obj;
     }
 
     _list(pred) {
-        const val = this._apply("anything")
+        const val = this._apply("anything");
         if (!this.isStreamlike(val)) throw fail;
 
-        const oldStream = this.stream;
-        const pos = this.mark();
+        const memento = this.makeMemento();
+
         this.stream = val;
         this.resetToStart();
+        this.memoTable = {};
 
         pred();
-
         this._apply('end')
 
-        this.stream = oldStream;
-        this.reset(pos);
+        this.restore(memento);
 
         // the predicate's actions will modify the stream,
         // so we can return it directly

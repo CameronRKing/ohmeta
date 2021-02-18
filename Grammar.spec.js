@@ -158,4 +158,30 @@ o.spec('base', () => {
             ]
         });
     });
+
+    o('matches lists', () => {
+        grammar.listOfLetterStrings = function() {
+            return this._list(
+                () => this._many1(
+                    () => this._list(
+                        () => this._many1(
+                            () => this._apply('letter')
+                        )
+                    )
+                )
+            );
+        };
+
+        testRule({
+            ruleName: 'listOfLetterStrings',
+            valid: [
+                [[['yes', 'I', 'work']], 'strings of letters'],
+            ],
+            invalid: [
+                [[['yes', 'I', 'fail!']], 'one string containining symbol'],
+                [[[]], 'empty list'],
+                [[['']], 'list with empty string'],
+            ]
+        });
+    });
 })
