@@ -142,12 +142,9 @@ o.spec('base', () => {
             ]
         });
 
-        grammar.objNested = makeTest('foo', function() {
-            return this._obj([{
-                prop: 'bar',
-                matcher: (function() { return this._apply('letter'); }).bind(grammar)
-            }]);
-        });
+        grammar.objNested = makeTest('foo',
+            makeTest('bar', function() { return this._apply('letter'); })
+        );
 
         testRule({
             ruleName: 'objNested',
