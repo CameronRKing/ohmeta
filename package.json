@@ -1,0 +1,22 @@
+{
+  "name": "ohmeta",
+  "version": "0.0.1",
+  "description": "Language-oriented programming toolkit for the web.",
+  "main": "src/index.js",
+  "scripts": {
+    "test": "ospec src/**/*.spec.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/CameronRKing/ohmeta.git"
+  },
+  "author": "Cameron King <cameronking42@gmail.com>",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/CameronRKing/ohmeta/issues"
+  },
+  "homepage": "https://github.com/CameronRKing/ohmeta#readme",
+  "devDependencies": {
+    "ospec": "git+https://github.com/CameronRKing/ospec.git"
+  }
+}
